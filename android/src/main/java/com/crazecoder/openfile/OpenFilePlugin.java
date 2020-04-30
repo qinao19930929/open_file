@@ -304,16 +304,19 @@ public class OpenFilePlugin implements MethodCallHandler
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void openApkFile() {
-        if (!canInstallApk()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startInstallPermissionSettingActivity();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (!canInstallApk()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startInstallPermissionSettingActivity();
+                } else {
+                    ActivityCompat.requestPermissions(activity,
+                            new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_CODE);
+                }
             } else {
-                ActivityCompat.requestPermissions(activity,
-                        new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_CODE);
+                startActivity();
             }
-        } else {
+        }else{
             startActivity();
         }
     }
