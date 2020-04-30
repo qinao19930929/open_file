@@ -143,10 +143,14 @@ public class OpenFilePlugin implements MethodCallHandler
         }
         intent.addCategory("android.intent.category.DEFAULT");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            String packageName = context.getPackageName();
-            Uri uri = FileProvider.getUriForFile(context, packageName + ".fileProvider", new File(filePath));
-            intent.setDataAndType(uri, typeString);
+            if (TYPE_STRING_APK.equals(typeString) && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                intent.setDataAndType(Uri.fromFile(file), typeString);
+            } else {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                String packageName = context.getPackageName();
+                Uri uri = FileProvider.getUriForFile(context, packageName + ".fileProvider", new File(filePath));
+                intent.setDataAndType(uri, typeString);
+            }
         } else {
             intent.setDataAndType(Uri.fromFile(file), typeString);
         }
@@ -304,19 +308,16 @@ public class OpenFilePlugin implements MethodCallHandler
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void openApkFile() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (!canInstallApk()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startInstallPermissionSettingActivity();
-                } else {
-                    ActivityCompat.requestPermissions(activity,
-                            new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_CODE);
-                }
+        if (!canInstallApk()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startInstallPermissionSettingActivity();
             } else {
-                startActivity();
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_CODE);
             }
-        }else{
+        } else {
             startActivity();
         }
     }
